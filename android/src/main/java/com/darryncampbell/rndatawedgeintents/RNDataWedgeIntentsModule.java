@@ -80,6 +80,8 @@ public class RNDataWedgeIntentsModule extends ReactContextBaseJavaModule impleme
 	//  The previously registered receiver (if any)
 	private String registeredAction = null;
 	private String registeredCategory = null;
+    private Boolean devMode=false;
+    private ReadableMap filterObject=null;
 
     private ReactApplicationContext reactContext;
 
@@ -95,13 +97,14 @@ public class RNDataWedgeIntentsModule extends ReactContextBaseJavaModule impleme
 
     @Override
     public void onHostResume() {
-        //Log.v(TAG, "Host Resume");
+      //  Log.v(TAG, "Host Resume");
       IntentFilter filter = new IntentFilter();
       filter.addAction(ACTION_ENUMERATEDLISET);
       reactContext.registerReceiver(myEnumerateScannersBroadcastReceiver, filter);
 	  if (this.registeredAction != null)
           registerReceiver(this.registeredAction, this.registeredCategory);
-          
+      if((this.filterObject != null)&& (this.devMode))
+          registerBroadcastReceiver(this.filterObject);
       //  Note regarding registerBroadcastReceiver:
       //  This module makes no attempt to unregister the receiver when the application is paused and re-registers the
       //  receiver when the application comes to the foreground.  Feel free to fork and add this logic to your solution if
@@ -110,7 +113,7 @@ public class RNDataWedgeIntentsModule extends ReactContextBaseJavaModule impleme
 
     @Override
     public void onHostPause() {
-        //Log.v(TAG, "Host Pause");
+      Log.v(TAG, "Host Pause");
       //  Note regarding registerBroadcastReceiver:
       //  This module makes no attempt to unregister the receiver when the application is paused and re-registers the
       //  receiver when the application comes to the foreground.  Feel free to fork and add this logic to your solution if
@@ -123,14 +126,19 @@ public class RNDataWedgeIntentsModule extends ReactContextBaseJavaModule impleme
       {
           //  Expected behaviour if there was not a previously registered receiver.
       }
-      try
+
+      if(this.devMode)
       {
-          this.reactContext.unregisterReceiver(genericReceiver);
+          try
+          {
+            this.reactContext.unregisterReceiver(genericReceiver);
+          }
+          catch (IllegalArgumentException e)
+          {
+              //  Expected behaviour if there was not a previously registered receiver.
+          }
       }
-      catch (IllegalArgumentException e)
-      {
-          //  Expected behaviour if there was not a previously registered receiver.
-      }
+    
       try
       {
           this.reactContext.unregisterReceiver(scannedDataBroadcastReceiver);
@@ -169,6 +177,12 @@ public class RNDataWedgeIntentsModule extends ReactContextBaseJavaModule impleme
       constants.put("ENABLE_PLUGIN", ENABLE_PLUGIN);
       constants.put("DISABLE_PLUGIN", DISABLE_PLUGIN);
       return constants;
+    }
+
+    @ReactMethod
+    public void setDevMode(Boolean mode)
+    {
+        this.devMode=mode;
     }
 
     @ReactMethod
@@ -375,9 +389,11 @@ public class RNDataWedgeIntentsModule extends ReactContextBaseJavaModule impleme
     @ReactMethod
     public void registerBroadcastReceiver(ReadableMap filterObj)
     {
+        // Log.v(TAG, "Register Broadcast Receiver");
         try
         {
             this.reactContext.unregisterReceiver(genericReceiver);
+            // Log.v(TAG, "Unregister Broadcast Receiver Success");
         }
         catch (IllegalArgumentException e)
         {
@@ -408,6 +424,7 @@ public class RNDataWedgeIntentsModule extends ReactContextBaseJavaModule impleme
                 }
             }
         }
+        this.filterObject=filterObj;
         this.reactContext.registerReceiver(genericReceiver, filter);
     }
 

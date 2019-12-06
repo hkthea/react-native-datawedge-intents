@@ -7,6 +7,9 @@
 var { Platform, NativeModules } = require('react-native');
 var RNDataWedgeIntents = NativeModules.DataWedgeIntents;
 
+var devMode=__DEV__;
+RNDataWedgeIntents.setDevMode(devMode);
+
 var DataWedgeIntents = {
     //  Specifying the DataWedge API constants in this module is deprecated.  It is not feasible to stay current with the DW API.
     ACTION_SOFTSCANTRIGGER: RNDataWedgeIntents.ACTION_SOFTSCANTRIGGER,
